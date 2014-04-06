@@ -1,9 +1,3 @@
-/**
-* Simple custom HTML element implementation, including support for local stylesheets (Less or CSS).
-* 
-* Copyright 2014 Phil Hargett, MIT license.
-* 
-**/
 (function(){
     
     // overload base create element
@@ -53,9 +47,14 @@
                             $(style).text($(style).text() + "\n" + sharedLess);
                         });
                     }
+
+                    // copy any link elements into head
+                    $('newtags tag link').each(function(index,link){
+                       $('head').append(link); 
+                    });
                     
                     // refresh styles built with Less, if it's available
-                    if(window.less != undefined) {
+                    if(window.hasOwnProperty('less') && window.less.hasOwnProperty('refreshStyles')) {
                         window.less.refreshStyles();
                     }
                     
