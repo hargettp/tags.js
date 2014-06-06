@@ -14,13 +14,15 @@
     };
     
     // helper to expand new instances of a given tag
-    function expandTagInstance(tagName) {
+    function createTags(tagName) {
        var content = $('tag[name="'+tagName+'"] template').html();
        // we need to find all tags that haven't already been expanded
        var unexpandedTags = $(tagName+'[x-template!="expanded"]');
        unexpandedTags.html(content);
        // mark as expanded, so we don't expand again
        unexpandedTags.attr('x-template','expanded');
+       // trigger the element ready event
+       $(unexpandedTags).trigger('ElementReady');
     }
 
     // do imports--this is how we get custom tags, by importing them
@@ -37,17 +39,6 @@
                 $.get(link.href,function(html) {
                    $('newtags').append(html);
                    
-                    // integrate any common Less styling into each tag's style element,
-                    // if the style element is a Less element
-                    if($('newtags less').length > 0) {
-                        var sharedLess = $('newtags less').text();
-                        
-                        // ensure any Less styles include shared information
-                        $('newtags style[type="text/less"]').each(function(index,style){
-                            $(style).text($(style).text() + "\n" + sharedLess);
-                        });
-                    }
-
                     // copy any link elements into head
                     $('newtags tag link').each(function(index,link){
                        $('head').append(link); 
@@ -55,13 +46,24 @@
                     
                     // refresh styles built with Less, if it's available
                     if(window.hasOwnProperty('less') && window.less.hasOwnProperty('refreshStyles')) {
+                        // integrate any common Less styling into each tag's style element,
+                        // if the style element is a Less element
+                        if($('newtags less').length > 0) {
+                            var sharedLess = $('newtags less').text();
+                            
+                            // ensure any Less styles include shared information
+                            $('newtags style[type="text/less"]').each(function(index,style){
+                                $(style).text($(style).text() + "\n" + sharedLess);
+                            });
+                        }
+                
                         window.less.refreshStyles();
                     }
                     
                     // replace the content of custom tags with their template
                     $('newtags tag').each(function(index,tag) {
                        var tagName = $(tag).attr('name');
-                       expandTagInstance(tagName);
+                       createTags(tagName);
                     });
                     
                     // mark the new tag definitions as loaded
@@ -69,6 +71,9 @@
                     $('tags').append($('newtags > tag'));
                     $('tags').append($('newtags > script'));
                     $('newtags').empty();
+                    
+                    // event to signall all elements loaded
+                    $(document).trigger('ElementsReady');
                 });
             }
         });
